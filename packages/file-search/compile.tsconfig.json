@@ -19,9 +19,6 @@
       "path": "../filesystem/compile.tsconfig.json"
     },
     {
-      "path": "../process/compile.tsconfig.json"
-    },
-    {
       "path": "../workspace/compile.tsconfig.json"
     }
   ]

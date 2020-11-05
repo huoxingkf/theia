@@ -22,7 +22,6 @@ import { FileUri } from '@theia/core/lib/node';
 import { Container, ContainerModule } from 'inversify';
 import { CancellationTokenSource } from '@theia/core';
 import { bindLogger } from '@theia/core/lib/node/logger-backend-module';
-import processBackendModule from '@theia/process/lib/node/process-backend-module';
 import URI from '@theia/core/lib/common/uri';
 import { FileSearchService } from '../common/file-search-service';
 
@@ -31,7 +30,6 @@ import { FileSearchService } from '../common/file-search-service';
 const testContainer = new Container();
 
 bindLogger(testContainer.bind.bind(testContainer));
-testContainer.load(processBackendModule);
 testContainer.load(new ContainerModule(bind => {
     bind(FileSearchServiceImpl).toSelf().inSingletonScope();
 }));
@@ -180,10 +178,16 @@ describe('search-service', function (): void {
                 const relativeMatch = relativeUri!.toString();
                 let position = 0;
                 for (const ch of 'shell') {
-                    position = relativeMatch.indexOf(ch, position);
-                    assert.notStrictEqual(position, -1, relativeMatch);
+                    position = relativeMatch.toLowerCase().indexOf(ch, position);
+                    assert.notStrictEqual(position, -1, `character "${ch}" not found in "${relativeMatch}"`);
                 }
             }
+        });
+
+        it('should not look into .git', async () => {
+            const matches = await service.find('master', { rootUris: [rootUri.toString()], fuzzyMatch: false, useGitIgnore: true, limit: 200 });
+            // `**/.git/refs/remotes/*/master` files should not be picked up
+            assert.deepStrictEqual([], matches);
         });
     });
 
